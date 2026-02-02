@@ -1,0 +1,6 @@
+__pycache__/
+user_uploads/
+done.txt
+*.mp4
+*.mp3
+.env
