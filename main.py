@@ -2,6 +2,9 @@ from flask import Flask, render_template, request
 import uuid
 from werkzeug.utils import secure_filename
 import os
+from threading import Thread
+from generate_process import process_folder
+
 
 UPLOAD_FOLDER = 'user_uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -18,32 +21,63 @@ def home():
 @app.route("/create", methods=["GET", "POST"])
 def create():
     myid = uuid.uuid1()
-    if request.method=="POST":
-        print(request.files.keys())
+
+    if request.method == "POST":
         rec_id = request.form.get("uuid")
         desc = request.form.get("text")
-        input_files=[]
-        for key, value in request.files.items():
-            print(key, value)
-            #upload the file
-            file=request.files[key]
+        input_files = []
+
+        for key in request.files:
+            file = request.files[key]
             if file:
                 filename = secure_filename(file.filename)
-                if(not(os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], rec_id)))):
-                   os.mkdir(os.path.join(app.config['UPLOAD_FOLDER'], rec_id))
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], rec_id, filename))
-                input_files.append(file.filename)
-            #capture the description and save it to a file
-            with open(os.path.join(app.config['UPLOAD_FOLDER'], rec_id, "desc.txt"), "w") as f:
-                f.write(desc)
+                folder_path = os.path.join(app.config['UPLOAD_FOLDER'], rec_id)
+                os.makedirs(folder_path, exist_ok=True)
+                file.save(os.path.join(folder_path, filename))
+                input_files.append(filename)
+
+        with open(os.path.join(folder_path, "desc.txt"), "w") as f:
+            f.write(desc)
+
         for fl in input_files:
-            with open(os.path.join(app.config['UPLOAD_FOLDER'], rec_id, "input.txt"), "a") as f:
+            with open(os.path.join(folder_path, "input.txt"), "a") as f:
                 f.write(f"file '{fl}'\nduration 1\n")
+
+        # THIS IS THE THREAD
+        Thread(target=process_folder, args=(rec_id,)).start()
+
+    return render_template("create.html", myid=myid)
+
+
+# @app.route("/create", methods=["GET", "POST"])
+# def create():
+#     myid = uuid.uuid1()
+#     if request.method=="POST":
+#         print(request.files.keys())
+#         rec_id = request.form.get("uuid")
+#         desc = request.form.get("text")
+#         input_files=[]
+#         for key, value in request.files.items():
+#             print(key, value)
+#             #upload the file
+#             file=request.files[key]
+#             if file:
+#                 filename = secure_filename(file.filename)
+#                 if(not(os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], rec_id)))):
+#                    os.mkdir(os.path.join(app.config['UPLOAD_FOLDER'], rec_id))
+#                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], rec_id, filename))
+#                 input_files.append(file.filename)
+#             #capture the description and save it to a file
+#             with open(os.path.join(app.config['UPLOAD_FOLDER'], rec_id, "desc.txt"), "w") as f:
+#                 f.write(desc)
+#         for fl in input_files:
+#             with open(os.path.join(app.config['UPLOAD_FOLDER'], rec_id, "input.txt"), "a") as f:
+#                 f.write(f"file '{fl}'\nduration 1\n")
                       
 
             
 
-    return render_template("create.html", myid=myid)
+#     return render_template("create.html", myid=myid)
 
 @app.route("/gallery")
 def gallery():
