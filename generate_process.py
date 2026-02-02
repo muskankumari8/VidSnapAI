@@ -26,14 +26,33 @@ def create_reel(folder):
 
     subprocess.run(command, shell=True, check=True)
 
+# def process_folder(folder):
+#     try:
+#         print("Processing:", folder)
+#         text_to_audio(folder)
+#         create_reel(folder)
+#         print("Completed:", folder)
+#     except Exception as e:
+#         print("Error processing", folder, e)
+
+
 def process_folder(folder):
     try:
-        print("Processing:", folder)
+        print("🚀 Processing started:", folder)
+
+        print("📖 Reading description...")
         text_to_audio(folder)
+
+        print("🔊 Audio created successfully")
+
+        print("🎬 Running FFmpeg...")
         create_reel(folder)
-        print("Completed:", folder)
+
+        print("✅ Reel created successfully:", folder)
+
     except Exception as e:
-        print("Error processing", folder, e)
+        print("❌ ERROR while processing folder:", folder)
+        print("❌ ERROR DETAILS:", e)
 
 
 
